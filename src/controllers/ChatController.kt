@@ -1,8 +1,10 @@
 package com.chat_server.controllers
 
-import com.chat_server.data.data_source.ChatDataSource
-import com.chat_server.data.models.ConnectedUser
-import com.chat_server.data.models.Message
+import com.chat_server.controllers.contract.BaseController
+import com.chat_server.data.models.*
+import com.chat_server.data.repository.contract.Repository
+import com.chat_server.exceptions.NoSuchDialogException
+import com.chat_server.sessions.ChatSession
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,55 +14,111 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.concurrent.ConcurrentHashMap
 
-class ChatController(private val chatDataSource: ChatDataSource) {
+class ChatController(repository: Repository) : BaseController(repository) {
     private val connectedUsers = ConcurrentHashMap<String, ConnectedUser>()
 
-    private val scope = CoroutineScope(Dispatchers.IO)
+    val scope = CoroutineScope(Dispatchers.IO)
 
     init {
+
         scope.launch {
-            while (true) {
-                delay(3000L)
-                println(connectedUsers.values)
+            while(true){
+                delay(1000L)
+                println(connectedUsers)
             }
         }
     }
 
-    fun onConnect(
+    fun onConnectGeneralChat(
         username: String,
         id: String,
-        socket: WebSocketSession
+        socket: WebSocketSession,
+        dialogId: Int
     ) {
         if (connectedUsers.containsKey(username)) {
             throw Exception()
         }
-        connectedUsers[username] = ConnectedUser(
-            username = username,
-            sessionId = id,
-            socketSession = socket
-        )
+        connectedUsers[username] =
+            ConnectedUser(
+                username = username,
+                sessionId = id,
+                socketSession = socket,
+                dialogId = dialogId
+            )
     }
 
-    suspend fun sendMessage(senderUsername: String, message: String) {
-        val messageEntity = Message(
+    private suspend fun sendMessage(senderUsername: String, message: String) {
+        val generalChatMessageEntity = GeneralChatMessage(
             text = message,
             senderUserName = senderUsername,
             timestamp = System.currentTimeMillis()
         )
-        val parsedMessage = Json.encodeToString(messageEntity)
+        val parsedMessage = Json.encodeToString(generalChatMessageEntity)
+        val websocketEntity = SocketModel(type = SocketModelType.GeneralChatMessage.type, value = parsedMessage)
+        val parsedEntity = Json.encodeToString(websocketEntity)
+
+        repository.saveGeneralChatMessage(generalChatMessageEntity)
         connectedUsers.values.forEach { connectedUser ->
-            connectedUser.socketSession.send(Frame.Text(parsedMessage))
+            connectedUser.socketSession.send(Frame.Text(parsedEntity))
         }
-        chatDataSource.saveMessage(messageEntity)
     }
 
-    suspend fun getAllMessages(): List<Message> {
-        return chatDataSource.getAllMessages()
+    private suspend fun sendDialogMessage(dialogId: Int, sender: String, message: String) {
+        val dialogMessageEntity = DialogMessage(
+            dialogId = dialogId,
+            sender = sender,
+            text = message,
+            timestamp = System.currentTimeMillis()
+        )
+
+        val parsedMessage = Json.encodeToString(dialogMessageEntity)
+        val websocketEntity = SocketModel(type = SocketModelType.DialogMessage.type, value = parsedMessage)
+        val parsedEntity = Json.encodeToString(websocketEntity)
+
+        repository.saveDialogMessage(dialogMessageEntity)
+        connectedUsers.values.forEach { connectedUser ->
+            connectedUser.socketSession.send(Frame.Text(parsedEntity))
+        }
     }
 
-    suspend fun getMessagesFromTimeStamp(timestamp: Long): List<Message> {
-        return chatDataSource.getMessagesFromTimeStamp(timestamp)
+    suspend fun getAllMessages(): List<GeneralChatMessage> {
+        return repository.getGeneralChatMessages()
     }
+
+    suspend fun receiveSocketModel(session: ChatSession, model: SocketModel) {
+        when (model.type) {
+            SocketModelType.GeneralChatMessage.type -> {
+                sendMessage(
+                    senderUsername = session.username,
+                    message = model.value
+                )
+            }
+            SocketModelType.DialogMessage.type -> {
+                sendDialogMessage(
+                    dialogId = session.dialogId,
+                    sender = session.username,
+                    message = model.value
+                )
+            }
+        }
+    }
+
+    suspend fun getDialogMessages(dialogId: Int): List<DialogMessage> {
+        return repository.getDialogMessages(dialogId)
+    }
+
+    suspend fun getDialogs(userId: Int): List<Dialog> {
+        return repository.getDialogs(userId)
+    }
+
+    suspend fun getDialogBetweenUsers(userId: Int, companionId: Int): Dialog {
+        val result = repository.getDialogBetweenUsers(userId, companionId)
+        if (result == null) {
+            repository.saveDialog(Dialog(creatorId = userId, companionId = companionId))
+        }
+        return repository.getDialogBetweenUsers(userId, companionId)?: throw NoSuchDialogException()
+    }
+
 
     suspend fun tryDisconnect(username: String) {
         connectedUsers[username]?.socketSession?.close()
@@ -69,4 +127,6 @@ class ChatController(private val chatDataSource: ChatDataSource) {
         }
     }
 }
+
+
 

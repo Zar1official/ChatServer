@@ -2,9 +2,7 @@ package com.chat_server.plugins
 
 import com.chat_server.controllers.ChatController
 import com.chat_server.controllers.UserController
-import com.chat_server.routes.chatRoute
-import com.chat_server.routes.loginRoute
-import com.chat_server.routes.registerRoute
+import com.chat_server.routes.*
 import io.ktor.application.*
 import io.ktor.routing.*
 import org.koin.ktor.ext.inject
@@ -16,6 +14,8 @@ fun Application.configureRouting() {
     install(Routing) {
         loginRoute(userController)
         registerRoute(userController)
-        chatRoute(chatController)
+        generalChatRoute(chatController)
+        dialogRoute(chatController)
+        userRoute(userController)
     }
 }

@@ -1,16 +1,23 @@
 package com.chat_server.data.data_source
 
+import com.chat_server.data.data_source.contract.UserDataSource
 import com.chat_server.data.db.DataBase
 import com.chat_server.data.models.User
 import com.chat_server.data.tables.UsersTable
-import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 
-class UserDataSourceImpl(db: DataBase, usersTable: UsersTable) : UserDataSource(db, usersTable) {
+class UserDataSourceImpl(db: DataBase, usersTable: UsersTable) :
+    UserDataSource(db, usersTable) {
     override suspend fun getUserByUserName(username: String): User? =
         db.dbQuery {
             usersTable.select { usersTable.username.eq(username) }.map { it.mapToUser() }.singleOrNull()
+        }
+
+    override suspend fun getUserById(id: Int): User? =
+        db.dbQuery {
+            usersTable.select { usersTable.userId.eq(id) }.map { it.mapToUser() }.singleOrNull()
         }
 
     override suspend fun saveUser(user: User) {
@@ -19,6 +26,12 @@ class UserDataSourceImpl(db: DataBase, usersTable: UsersTable) : UserDataSource(
                 u[usersTable.username] = user.username
                 u[usersTable.password] = user.password
             }
+        }
+    }
+
+    override suspend fun getUsers(): List<User> {
+        return db.dbQuery {
+            usersTable.selectAll().map { it.mapToUser() }
         }
     }
 }

@@ -4,8 +4,9 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 
 class UsersTable : Table("users") {
-    val username: Column<String> = varchar("username", 100)
-    val password: Column<String> = varchar("password", 100)
+    val userId: Column<Int> = integer("user_id")
+    val username: Column<String> = varchar("username", 25)
+    val password: Column<String> = varchar("password", 25)
 
-    override val primaryKey: PrimaryKey = PrimaryKey(username)
+    override val primaryKey: PrimaryKey = PrimaryKey(userId)
 }

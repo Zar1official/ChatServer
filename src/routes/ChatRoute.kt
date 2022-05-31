@@ -1,6 +1,8 @@
 package com.chat_server.routes
 
 import com.chat_server.controllers.ChatController
+import com.chat_server.data.models.SocketModel
+import com.chat_server.data.models.SocketModelType
 import com.chat_server.sessions.ChatSession
 import io.ktor.application.*
 import io.ktor.http.*
@@ -10,51 +12,37 @@ import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 
-fun Route.chatRoute(chatController: ChatController) {
-    webSocket("/chat-socket") {
+fun Route.generalChatRoute(chatController: ChatController) {
+    webSocket(Routes.GeneralChat.path) {
         val session = call.sessions.get<ChatSession>()
         if (session == null) {
             close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "No session."))
             return@webSocket
         }
-        try {
-            chatController.onConnect(
-                username = session.username,
-                id = session.id,
-                socket = this
-            )
-            incoming.consumeEach { frame ->
-                println(frame.data)
-                if (frame is Frame.Text) {
-                    chatController.sendMessage(
-                        senderUsername = session.username,
-                        message = frame.readText()
-                    )
-                }
+        chatController.onConnectGeneralChat(
+            username = session.username,
+            id = session.id,
+            socket = this,
+            dialogId = session.dialogId
+        )
+        incoming.consumeEach { frame ->
+            if (frame is Frame.Text) {
+                val entity = Json.decodeFromString<SocketModel>(frame.readText())
+                chatController.receiveSocketModel(session, entity)
             }
-        } catch (e: Throwable) {
-            call.respond(HttpStatusCode.Conflict)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            chatController.tryDisconnect(session.username)
         }
+        chatController.tryDisconnect(session.username)
     }
 
-    route("/messages") {
+    route(Routes.GeneralChatMessages.path) {
         get {
-            val timestamp = call.parameters["timestamp"]?.toLong()
-            if (timestamp == null) {
                 call.respond(
                     HttpStatusCode.OK,
                     chatController.getAllMessages()
                 )
-            } else {
-                call.respond(
-                    chatController.getMessagesFromTimeStamp(timestamp)
-                )
-            }
         }
     }
 }
