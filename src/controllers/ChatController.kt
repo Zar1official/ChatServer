@@ -6,10 +6,6 @@ import com.chat_server.data.repository.contract.Repository
 import com.chat_server.exceptions.NoSuchDialogException
 import com.chat_server.sessions.ChatSession
 import io.ktor.http.cio.websocket.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.concurrent.ConcurrentHashMap
@@ -17,27 +13,12 @@ import java.util.concurrent.ConcurrentHashMap
 class ChatController(repository: Repository) : BaseController(repository) {
     private val connectedUsers = ConcurrentHashMap<String, ConnectedUser>()
 
-    val scope = CoroutineScope(Dispatchers.IO)
-
-    init {
-
-        scope.launch {
-            while(true){
-                delay(1000L)
-                println(connectedUsers)
-            }
-        }
-    }
-
     fun onConnectGeneralChat(
         username: String,
         id: String,
         socket: WebSocketSession,
         dialogId: Int
     ) {
-        if (connectedUsers.containsKey(username)) {
-            throw Exception()
-        }
         connectedUsers[username] =
             ConnectedUser(
                 username = username,

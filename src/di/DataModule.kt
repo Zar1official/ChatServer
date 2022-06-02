@@ -10,6 +10,6 @@ val dataModule = module {
     single<Repository> { RepositoryImpl(chatDataSource = get(), userDataSource = get(), dialogDataSource = get()) }
 
     single<DataBase> {
-        DataBase(usersTable = get(), generalChatMessagesTable = get())
+        DataBase()
     }
 }

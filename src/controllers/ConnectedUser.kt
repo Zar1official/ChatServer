@@ -1,4 +1,4 @@
-package com.chat_server.data.models
+package com.chat_server.controllers
 
 import io.ktor.http.cio.websocket.*
 
