@@ -3,11 +3,14 @@ package com.chat_server.controllers
 import com.chat_server.controllers.contract.BaseController
 import com.chat_server.data.models.*
 import com.chat_server.data.repository.contract.Repository
-import com.chat_server.exceptions.NoSuchDialogException
 import com.chat_server.sessions.ChatSession
+import exceptions.NoSuchDialogException
 import io.ktor.http.cio.websocket.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import models.DialogEntity
+import models.DialogMessageEntity
+import models.GeneralChatMessageEntity
 import java.util.concurrent.ConcurrentHashMap
 
 class ChatController(repository: Repository) : BaseController(repository) {
@@ -29,7 +32,7 @@ class ChatController(repository: Repository) : BaseController(repository) {
     }
 
     private suspend fun sendMessage(senderUsername: String, message: String) {
-        val generalChatMessageEntity = GeneralChatMessage(
+        val generalChatMessageEntity = GeneralChatMessageEntity(
             text = message,
             senderUserName = senderUsername,
             timestamp = System.currentTimeMillis()
@@ -45,7 +48,7 @@ class ChatController(repository: Repository) : BaseController(repository) {
     }
 
     private suspend fun sendDialogMessage(dialogId: Int, sender: String, message: String) {
-        val dialogMessageEntity = DialogMessage(
+        val dialogMessageEntity = DialogMessageEntity(
             dialogId = dialogId,
             sender = sender,
             text = message,
@@ -58,11 +61,12 @@ class ChatController(repository: Repository) : BaseController(repository) {
 
         repository.saveDialogMessage(dialogMessageEntity)
         connectedUsers.values.forEach { connectedUser ->
-            connectedUser.socketSession.send(Frame.Text(parsedEntity))
+            if (connectedUser.dialogId == dialogId)
+                connectedUser.socketSession.send(Frame.Text(parsedEntity))
         }
     }
 
-    suspend fun getAllMessages(): List<GeneralChatMessage> {
+    suspend fun getAllMessages(): List<GeneralChatMessageEntity> {
         return repository.getGeneralChatMessages()
     }
 
@@ -84,20 +88,20 @@ class ChatController(repository: Repository) : BaseController(repository) {
         }
     }
 
-    suspend fun getDialogMessages(dialogId: Int): List<DialogMessage> {
+    suspend fun getDialogMessages(dialogId: Int): List<DialogMessageEntity> {
         return repository.getDialogMessages(dialogId)
     }
 
-    suspend fun getDialogs(userId: Int): List<Dialog> {
+    suspend fun getDialogs(userId: Int): List<DialogEntity> {
         return repository.getDialogs(userId)
     }
 
-    suspend fun getDialogBetweenUsers(userId: Int, companionId: Int): Dialog {
+    suspend fun getDialogBetweenUsers(userId: Int, companionId: Int): DialogEntity {
         val result = repository.getDialogBetweenUsers(userId, companionId)
         if (result == null) {
-            repository.saveDialog(Dialog(creatorId = userId, companionId = companionId))
+            repository.saveDialog(DialogEntity(creatorId = userId, companionId = companionId))
         }
-        return repository.getDialogBetweenUsers(userId, companionId)?: throw NoSuchDialogException()
+        return repository.getDialogBetweenUsers(userId, companionId) ?: throw NoSuchDialogException()
     }
 
 

@@ -1,10 +1,10 @@
-package com.chat_server.data.data_source.contract
+package com.chat_server.data.datasource.contract
 
 import com.chat_server.data.db.DataBase
-import com.chat_server.data.models.Dialog
-import com.chat_server.data.models.DialogMessage
 import com.chat_server.data.tables.DialogMessagesTable
 import com.chat_server.data.tables.DialogsTable
+import models.DialogEntity
+import models.DialogMessageEntity
 import org.jetbrains.exposed.sql.ResultRow
 
 abstract class DialogDataSource(
@@ -12,14 +12,14 @@ abstract class DialogDataSource(
     protected val dialogMessagesTable: DialogMessagesTable,
     protected val dialogsTable: DialogsTable
 ) {
-    abstract suspend fun getAllDialogMessages(dialogId: Int): List<DialogMessage>
-    abstract suspend fun saveDialogMessage(dialogMessage: DialogMessage)
-    abstract suspend fun saveDialog(dialog: Dialog)
-    abstract suspend fun getDialogBetweenUsers(userId: Int, companionId: Int): Dialog?
-    abstract suspend fun getUserDialogs(userId: Int): List<Dialog>
+    abstract suspend fun getAllDialogMessages(dialogId: Int): List<DialogMessageEntity>
+    abstract suspend fun saveDialogMessage(dialogMessageEntity: DialogMessageEntity)
+    abstract suspend fun saveDialog(dialogEntity: DialogEntity)
+    abstract suspend fun getDialogBetweenUsers(userId: Int, companionId: Int): DialogEntity?
+    abstract suspend fun getUserDialogs(userId: Int): List<DialogEntity>
 
-    fun ResultRow.mapToMessage(): DialogMessage {
-        return DialogMessage(
+    fun ResultRow.mapToMessage(): DialogMessageEntity {
+        return DialogMessageEntity(
             messageId = this[dialogMessagesTable.messageId],
             dialogId = this[dialogMessagesTable.dialogId],
             text = this[dialogMessagesTable.text],
@@ -28,8 +28,8 @@ abstract class DialogDataSource(
         )
     }
 
-    fun ResultRow.mapToDialog(): Dialog {
-        return Dialog(
+    fun ResultRow.mapToDialog(): DialogEntity {
+        return DialogEntity(
             dialogId = this[dialogsTable.dialogId],
             creatorId = this[dialogsTable.creatorId],
             companionId = this[dialogsTable.companionId]

@@ -1,32 +1,32 @@
 package com.chat_server.controllers
 
 import com.chat_server.controllers.contract.BaseController
-import com.chat_server.data.models.User
 import com.chat_server.data.repository.contract.Repository
-import com.chat_server.exceptions.NoSuchUserException
-import com.chat_server.exceptions.UserAlreadyExistsException
+import exceptions.NoSuchUserException
+import exceptions.UserAlreadyExistsException
+import models.UserEntity
 
 class UserController(repository: Repository) : BaseController(repository) {
-    suspend fun tryLogin(user: User): User {
-        val isValid = repository.login(user)
+    suspend fun tryLogin(userEntity: UserEntity): UserEntity {
+        val isValid = repository.login(userEntity)
         if (!isValid) {
             throw NoSuchUserException()
         } else {
-            return repository.getUserByUserName(user.username) ?: throw NoSuchUserException()
+            return repository.getUserByUserName(userEntity.username) ?: throw NoSuchUserException()
         }
     }
 
-    suspend fun tryRegister(user: User): User {
-        val isValid = repository.register(user)
+    suspend fun tryRegister(userEntity: UserEntity): UserEntity {
+        val isValid = repository.register(userEntity)
         if (!isValid)
             throw UserAlreadyExistsException()
         else {
-            repository.saveUser(user)
-            return repository.getUserByUserName(user.username) ?: throw NoSuchUserException()
+            repository.saveUser(userEntity)
+            return repository.getUserByUserName(userEntity.username) ?: throw NoSuchUserException()
         }
     }
 
-    suspend fun getUsers(): List<User> {
+    suspend fun getUsers(): List<UserEntity> {
         return repository.getUsers()
     }
 }

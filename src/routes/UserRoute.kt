@@ -1,6 +1,7 @@
 package com.chat_server.routes
 
 import com.chat_server.controllers.UserController
+import constants.Routes
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*

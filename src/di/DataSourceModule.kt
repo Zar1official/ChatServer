@@ -1,11 +1,11 @@
 package com.chat_server.di
 
-import com.chat_server.data.data_source.ChatDataSourceImpl
-import com.chat_server.data.data_source.DialogDataSourceImpl
-import com.chat_server.data.data_source.UserDataSourceImpl
-import com.chat_server.data.data_source.contract.ChatDataSource
-import com.chat_server.data.data_source.contract.DialogDataSource
-import com.chat_server.data.data_source.contract.UserDataSource
+import com.chat_server.data.datasource.ChatDataSourceImpl
+import com.chat_server.data.datasource.DialogDataSourceImpl
+import com.chat_server.data.datasource.UserDataSourceImpl
+import com.chat_server.data.datasource.contract.ChatDataSource
+import com.chat_server.data.datasource.contract.DialogDataSource
+import com.chat_server.data.datasource.contract.UserDataSource
 import org.koin.dsl.module
 
 val dataSourceModule = module {

@@ -4,6 +4,7 @@ import com.chat_server.controllers.ChatController
 import com.chat_server.data.models.SocketModel
 import com.chat_server.data.models.SocketModelType
 import com.chat_server.sessions.ChatSession
+import constants.Routes
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
