@@ -1,8 +1,6 @@
 package com.chat_server.routes
 
 import com.chat_server.controllers.ChatController
-import com.chat_server.data.models.SocketModel
-import com.chat_server.data.models.SocketModelType
 import com.chat_server.sessions.ChatSession
 import constants.Routes
 import io.ktor.application.*
@@ -15,6 +13,7 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import models.SocketModel
 
 fun Route.generalChatRoute(chatController: ChatController) {
     webSocket(Routes.GeneralChat.path) {

@@ -3,7 +3,6 @@ package com.chat_server.data.repository
 import com.chat_server.data.datasource.contract.ChatDataSource
 import com.chat_server.data.datasource.contract.DialogDataSource
 import com.chat_server.data.datasource.contract.UserDataSource
-import com.chat_server.data.models.*
 import com.chat_server.data.repository.contract.Repository
 import models.DialogEntity
 import models.DialogMessageEntity

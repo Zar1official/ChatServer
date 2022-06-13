@@ -1,16 +1,13 @@
 package com.chat_server.controllers
 
 import com.chat_server.controllers.contract.BaseController
-import com.chat_server.data.models.*
 import com.chat_server.data.repository.contract.Repository
 import com.chat_server.sessions.ChatSession
 import exceptions.NoSuchDialogException
 import io.ktor.http.cio.websocket.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import models.DialogEntity
-import models.DialogMessageEntity
-import models.GeneralChatMessageEntity
+import models.*
 import java.util.concurrent.ConcurrentHashMap
 
 class ChatController(repository: Repository) : BaseController(repository) {
